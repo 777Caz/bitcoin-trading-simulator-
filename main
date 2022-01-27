@@ -1,0 +1,165 @@
+#importing modules
+!pip install yfinance
+!pip install crypto_news_api
+# Raw Package
+import numpy as np
+import pandas as pd
+
+#Data Source
+import yfinance as yf
+
+#Data viz
+import plotly.graph_objs as go
+
+# Get Bitcoin data
+data = yf.download(tickers='BTC-USD', period = '1mo', interval = '15m')
+
+#declare figure
+fig = go.Figure()
+
+#Candlestick
+fig.add_trace(go.Candlestick(x=data.index,
+                open=data['Open'],
+                high=data['High'],
+                low=data['Low'],
+                close=data['Close'], name = 'market data'))
+
+# Add titles
+fig.update_layout(
+    title='Bitcoin live share price evolution',
+    yaxis_title='Bitcoin Price (Dollars)')
+
+# X-Axes
+fig.update_xaxes(
+    rangeslider_visible=True,
+    rangeselector=dict(
+        buttons=list([
+            dict(count=15, label="15m", step="minute", stepmode="backward"),
+            dict(count=45, label="45m", step="minute", stepmode="backward"),
+            dict(count=1, label="HTD", step="hour", stepmode="todate"),
+            dict(count=6, label="6h", step="hour", stepmode="backward"),
+            dict(step="all")
+        ])
+    )
+)
+
+#Show
+fig.show()
+#uses the Yahoo Finance module to request and download Bitcoin information and price
+stock = yf.Ticker("BTC-USD") 
+
+#the downloaded data has different parts, selects only the needed information
+C_price = stock.info['regularMarketPrice'] 
+
+# prints the current price of Bitcoin as a float
+print("Current Price of Bitcoin: $", C_price)
+
+#gets current market price as an integer
+
+#opens the txt file and splits the lines
+b = open('t.txt', "r").read().splitlines()
+
+#creates and empty array
+balance = []
+
+#intitates loop
+for b in b:
+	#adds every value that its seperated to the array
+	balance.append(b.split(" - "))
+ #loop endds when there are no more values 
+
+#prints the balance details array
+print(balance)
+
+def shortlong():
+	user = int(input("""
+	1:long 
+	2:short
+	3:view trades
+	Option: """))
+	
+	if user ==1:
+		long()
+	
+	if user == 2:
+		short()
+	if user == 3:
+		viewtrades()
+	
+	else:
+		shortlong()
+
+def long():
+	q=float(input("Enter quantity:"))
+
+	stock = yf.Ticker("BTC-USD")
+	C_price = stock.info['regularMarketPrice']
+
+	t_margin = q*C_price
+	new_port = [0, 0 ,0 ,0 ,0, 0 ,0]
+
+	profit_loss = (C_price * q) - t_margin
+	change = (((t_margin/q) - C_price)/(t_margin/q))*100
+	price_bought = C_price
+	liqud_money = (float(balance[0][0])-t_margin)
+	new_port[0] = liqud_money
+	new_port[1] = int(balance[0][1]) + 1 #long = 1 short = 0
+	new_port[2] = t_margin + float(balance[0][2]) # how much money is in 
+	new_port[3] = profit_loss #the current price - price bought at
+	new_port[4] = change # % profit but in perentage
+	new_port[5] = C_price #holds the current value of the asset bought
+	new_port[6] = price_bought #makes a memory for what the asset was bought at
+	print(new_port)
+	
+	new_b = open('t.txt', 'w')
+	new_b.write("{} - {} - {} - {} - {} - {} - {}".format(new_port[0],new_port[1], new_port[2], new_port[3], new_port[4], new_port[5], new_port[6]))
+
+	print("""
+	Order summary - 
+	Average price: $""", C_price, """
+	Total margin: $""", t_margin, """
+	Spare funds: $""", liqud_money, """
+	Profit / Loss: $""", profit_loss, """
+	% Change: """, change, """%""")
+
+	
+
+def short():
+	print("L")
+
+def viewtrades():
+	b= open('t.txt', "r").read().splitlines()
+	balance = []
+	for b in b:
+		balance.append(b.split(" - "))
+	
+
+	stock = yf.Ticker("BTC-USD")
+	C_price = stock.info['regularMarketPrice']
+	print(balance)
+
+	profit = 0
+	profit = C_price - (float(balance[0][5])) 
+	per_profit = (profit/ float(balance[0][2]))*100
+	print("%", per_profit)
+	new_port = [0, 0, 0, 0, 0, 0, 0]
+	new_port[0] = balance[0][0] #current balance
+	new_port[1] = balance[0][1] #long or short
+	new_port[2] = balance[0][2] # total money in
+	new_port[3] = profit #profti loss
+	new_port[4] = per_profit # profit loss %
+	new_port[5] = balance[0][5] # shows the price bought at
+	new_port[6] = C_price
+
+	print("""
+Portfolio:
+Cash: $""", new_port[0], """
+number of trades: """, new_port[1], """
+Current Price: $""", C_price, """
+Money invested: $""", new_port[2], """
+Profit: $""", profit, """,""", per_profit,"""%
+""")
+
+	new_b = open('t.txt', 'w')
+	new_b.write("{} - {} - {} - {} - {} - {} - {}".format(new_port[0],new_port[1], new_port[2], new_port[3], new_port[4], new_port[5], new_port[6]))
+shortlong()
